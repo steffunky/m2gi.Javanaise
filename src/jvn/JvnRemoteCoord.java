@@ -17,6 +17,8 @@ import java.io.*;
 
 public interface JvnRemoteCoord extends Remote {
 
+	public static final String jvnCoordRemoteIdentfier = "JVNID";
+	
 	/**
 	*  Allocate a NEW JVN object id (usually allocated to a 
   *  newly created JVN object)
