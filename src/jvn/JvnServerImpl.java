@@ -9,10 +9,12 @@
 package jvn;
 
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Hashtable;
 import java.io.*;
+import java.net.MalformedURLException;
 
 
 
@@ -26,7 +28,7 @@ implements JvnLocalServer, JvnRemoteServer{
 	// A JVN server is managed as a singleton 
 	private static JvnServerImpl js = null;
 	
-	private Hashtable<Integer, JvnObject> jvnObjects;
+	private Hashtable<Integer, JvnObject> jvnObjectsCache;
 
 	// Remote object
 	private JvnRemoteCoord jc;
@@ -34,11 +36,14 @@ implements JvnLocalServer, JvnRemoteServer{
 	/**
 	 * Default constructor
 	 * @throws JvnException
+	 * @throws NotBoundException 
+	 * @throws RemoteException 
+	 * @throws MalformedURLException 
 	 **/
-	private JvnServerImpl() throws Exception {
+	private JvnServerImpl() throws JvnException, MalformedURLException, RemoteException, NotBoundException {
 		super();
 		// to be completed
-		this.jvnObjects = new Hashtable<Integer, JvnObject>();
+		this.jvnObjectsCache = new Hashtable<Integer, JvnObject>();
 		this.jc = (JvnRemoteCoord) Naming.lookup(String.join("/", coordNetworkURL, JvnRemoteCoord.jvnCoordRemoteIdentfier));
 	}
 
@@ -66,8 +71,8 @@ implements JvnLocalServer, JvnRemoteServer{
 		// to be completed 
 		try {
 			this.jc.jvnTerminate(this);
-			this.jvnObjects.clear();
-			this.jvnObjects = null;
+			this.jvnObjectsCache.clear();
+			this.jvnObjectsCache = null;
 		} catch (RemoteException e) {
 			e.printStackTrace();
 			throw new JvnException("Erreur lors de la tentative de terminaison du coordinateur distant");
@@ -83,7 +88,7 @@ implements JvnLocalServer, JvnRemoteServer{
 	public JvnObject jvnCreateObject(Serializable o) throws jvn.JvnException 
 	{ 
 		try {
-			int id = this.jc.jvnGetObjectId();
+			int id = this.jc.jvnGetObjectId(); // Obtention de l'identifiant du nouvel objet jvn
 			JvnObject obj = new JvnObjectImpl(o, id);
 			obj.jvnLockWrite(); // Mise en place du verrou en écriture sur l'objet
 			return obj;
@@ -103,8 +108,8 @@ implements JvnLocalServer, JvnRemoteServer{
 	public  void jvnRegisterObject(String jon, JvnObject jo) throws jvn.JvnException {
 		// to be completed 
 		try {
-			this.jc.jvnRegisterObject(jon, jo, this);
-			this.jvnObjects.put(jo.jvnGetObjectId(), jo);
+			this.jc.jvnRegisterObject(jon, jo, this); // Enregistre l'objet jvn dans le coordinateur distant
+			this.jvnObjectsCache.put(jo.jvnGetObjectId(), jo); // Enregistre l'objet jvn dans le cache du serveur
 		} catch (RemoteException e) {
 			e.printStackTrace();
 			throw new JvnException("Erreur lors de la tentative d'enregistrement de l'objet dans le coordinateur distant");
@@ -120,10 +125,10 @@ implements JvnLocalServer, JvnRemoteServer{
 	public JvnObject jvnLookupObject(String jon) throws jvn.JvnException {
 		// to be completed 
 		try {
-			JvnObject obj = this.jc.jvnLookupObject(jon, this);
-			this.jvnObjects.put(obj.jvnGetObjectId(), obj);
+			JvnObject obj = this.jc.jvnLookupObject(jon, this); // Obtient l'objet jvn distant
+			this.jvnObjectsCache.put(obj.jvnGetObjectId(), obj); // Enregistre ou mets à jour l'objet jvn dans le cache serveur
 			return obj;
-		} catch (RemoteException e) {
+		} catch (RemoteException | NullPointerException e) {
 			e.printStackTrace();
 			throw new JvnException("Erreur lors de la tentative d'obtention de l'objet disponible dans le coordinateur distant");
 		}
@@ -169,10 +174,12 @@ implements JvnLocalServer, JvnRemoteServer{
 	 * @return void
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public synchronized void jvnInvalidateReader(int joi)
-			throws java.rmi.RemoteException,jvn.JvnException {
-		// to be completed 
-		
+	public synchronized void jvnInvalidateReader(int joi) throws java.rmi.RemoteException,jvn.JvnException {
+		// to be completed
+		JvnObject obj = this.jvnObjectsCache.get(joi);
+		if(obj == null)
+			throw new JvnException("Objet JVN inexistant dans le cache serveur");
+		obj.jvnInvalidateReader();
 	};
 
 	/**
@@ -181,10 +188,12 @@ implements JvnLocalServer, JvnRemoteServer{
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public synchronized Serializable jvnInvalidateWriter(int joi)
-			throws java.rmi.RemoteException,jvn.JvnException { 
+	public synchronized Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
 		// to be completed 
-		return null;
+		JvnObject obj = this.jvnObjectsCache.get(joi);
+		if(obj == null)
+			throw new JvnException("Objet JVN inexistant dans le cache serveur");
+		return obj.jvnInvalidateWriter();
 	};
 
 	/**
@@ -193,10 +202,12 @@ implements JvnLocalServer, JvnRemoteServer{
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public synchronized Serializable jvnInvalidateWriterForReader(int joi)
-			throws java.rmi.RemoteException,jvn.JvnException { 
+	public synchronized Serializable jvnInvalidateWriterForReader(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
 		// to be completed 
-		return null;
+		JvnObject obj = this.jvnObjectsCache.get(joi);
+		if(obj == null)
+			throw new JvnException("Objet JVN inexistant dans le cache serveur");
+		return obj.jvnInvalidateWriterForReader();
 	};
 
 }

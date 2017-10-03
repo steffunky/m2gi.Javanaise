@@ -7,8 +7,6 @@ public class JvnObjectImpl implements JvnObject {
 	private static final long serialVersionUID = 1L;
 	private int id;
 	private Serializable serializedObject;
-	
-	@SuppressWarnings("unused")
 	private LockState state;
 
 	protected JvnObjectImpl(Serializable object, Integer id)
@@ -19,51 +17,215 @@ public class JvnObjectImpl implements JvnObject {
 	}
 	
 	@Override
-	public void jvnLockRead() throws JvnException {
-		if(this.state == LockState.Write || this.state == LockState.WriteCached)
-			this.state = LockState.ReadWriteCached;
-		else this.state = LockState.Read;
+	public void setSerializedObject(Serializable serializedObject) {
+		this.serializedObject = serializedObject;
+	}
+
+	@Override
+	public void jvnLockRead() throws JvnException 
+	{
+		switch(this.state)
+		{
+			case Write:
+				// Nothing
+				break;
+			case WriteCached:
+				this.state = LockState.ReadWriteCached;
+				break;
+			case ReadWriteCached:
+				// Nothing
+				break;
+			case Read:
+				// Nothing
+				break;
+			case ReadCached:
+				this.state = LockState.Read;
+				break;
+			case NoLock:
+				JvnLocalServer server = JvnServerImpl.jvnGetServer(); // Obtention de la ref serveur
+				server.jvnLockRead(this.jvnGetObjectId());
+				this.state = LockState.Read;
+				break;
+			default:
+				throw new JvnException("Etat non valide \"" + this.state + "\"");
+		}
 	}
 
 	@Override
 	public void jvnLockWrite() throws JvnException {
 		
-		this.state = LockState.Write;
-		
+		// Obtention du serveur parent
+		switch(this.state)
+		{
+			case Write:
+				// Nothing
+				break;
+			case WriteCached:
+			case ReadWriteCached:
+				this.state = LockState.Write;
+				break;
+			case Read:
+			case ReadCached:
+			case NoLock:
+				JvnLocalServer server = JvnServerImpl.jvnGetServer(); // Obtention de la ref serveur
+				server.jvnLockWrite(this.jvnGetObjectId());
+				this.state = LockState.Write;
+				break;
+			default:
+				throw new JvnException("Etat non valide \"" + this.state + "\"");
+		}
 	}
 
 	@Override
-	public void jvnUnLock() throws JvnException {
-		this.state = LockState.NoLock;
-		
+	public void jvnUnLock() throws JvnException 
+	{
+		switch(this.state)
+		{
+			case Write:
+				this.state = LockState.WriteCached;
+				break;
+			case WriteCached:
+				// Nothing
+				break;
+			case ReadWriteCached:
+				this.state = LockState.WriteCached; // Libération du read seulement
+				break;
+			case Read:
+				this.state = LockState.ReadCached;
+			case ReadCached:
+				// Nothing
+				break;
+			case NoLock:
+				// Nothing
+				break;
+			default:
+				throw new JvnException("Etat non valide \"" + this.state + "\"");
+		}		
 	}
 
 	@Override
 	public int jvnGetObjectId() throws JvnException {
-		// TODO Auto-generated method stub
 		return this.id;
 	}
 
 	@Override
 	public Serializable jvnGetObjectState() throws JvnException {
-		// TODO Auto-generated method stub
 		return this.serializedObject;
 	}
 
 	@Override
-	public void jvnInvalidateReader() throws JvnException {
-		this.state = LockState.ReadCached;	
+	public void jvnInvalidateReader() throws JvnException 
+	{
+		try 
+		{
+			switch(this.state)
+			{
+				case Read:
+					this.wait(); // Mise en attente de notification
+					this.state = LockState.NoLock;
+					break;
+				case Write:
+					throw new JvnException("Cas invalide");
+				case ReadCached:
+					this.state = LockState.NoLock;
+					break;
+				case WriteCached:
+					throw new JvnException("Cas invalide");
+				case ReadWriteCached:
+					this.state = LockState.NoLock;
+					break;
+				case NoLock:
+					// Nothing
+					break;
+				default:
+					throw new JvnException("Etat non valide \"" + this.state + "\"");
+				
+			}
+		}
+		catch(InterruptedException e)
+		{
+			e.printStackTrace();
+			throw new JvnException(e.getMessage());
+		}
 	}
 
 	@Override
-	public Serializable jvnInvalidateWriter() throws JvnException {
-		this.state = LockState.WriteCached;
+	public Serializable jvnInvalidateWriter() throws JvnException 
+	{
+		try 
+		{
+			switch(this.state)
+			{
+				case Read:
+					// Nothing
+					break;
+				case Write:
+					this.wait(); // Mise en attente de notification
+					this.state = LockState.NoLock;
+					break;
+				case ReadCached:
+					// Nothing
+					break;
+				case WriteCached:
+					this.state = LockState.NoLock;
+					break;
+				case ReadWriteCached:
+					this.state = LockState.NoLock;
+					break;
+				case NoLock:
+					// Nothing
+					break;
+				default:
+					throw new JvnException("Etat non valide \"" + this.state + "\"");
+				
+			}
+		}
+		catch(InterruptedException e)
+		{
+			e.printStackTrace();
+			throw new JvnException(e.getMessage());
+		}
+		
 		return this.jvnGetObjectState();
 	}
 
 	@Override
-	public Serializable jvnInvalidateWriterForReader() throws JvnException {
-		this.state = LockState.ReadWriteCached;
+	public Serializable jvnInvalidateWriterForReader() throws JvnException 
+	{
+		try 
+		{
+			switch(this.state)
+			{
+				case Read:
+					// Nothing
+					break;
+				case Write:
+					this.wait(); // En attente de notification
+					this.state = LockState.Read;
+					break;
+				case ReadCached:
+					this.state = LockState.Read;
+					break;
+				case WriteCached:
+					this.state = LockState.Read;
+					break;
+				case ReadWriteCached:
+					this.state = LockState.Read;
+					break;
+				case NoLock:
+					this.state = LockState.Read;
+					break;
+				default:
+					throw new JvnException("Etat non valide \"" + this.state + "\"");
+				
+			}
+		}
+		catch(InterruptedException e)
+		{
+			e.printStackTrace();
+			throw new JvnException(e.getMessage());
+		}
+		
 		return this.jvnGetObjectState();
 	}
 
