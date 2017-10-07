@@ -15,10 +15,12 @@ rmiregistry -J-Djava.rmi.server.useCodebaseOnly=false &
 
 #### Lancement du coordinateur
 ```sh
-java build.jvn.coordinator.Program &
+cd build
+java jvn.coordinator.Program &
 ```
 
 ### Lancement du client IRC
 ```sh
-java build.irc.Irc &
+cd build
+java irc.Irc &
 ```
