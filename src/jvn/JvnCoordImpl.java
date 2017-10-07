@@ -15,9 +15,7 @@ import java.util.List;
 import java.io.Serializable;
 
 
-public class JvnCoordImpl 	
-extends UnicastRemoteObject 
-implements JvnRemoteCoord {
+public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -159,9 +157,10 @@ implements JvnRemoteCoord {
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public synchronized Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
+	public synchronized Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException
+	{
 		// to be completed
-		Serializable result;
+		Serializable result = null;
 		
 		/** ECRITURE **/
 		// Obtention du serveur en écriture sur l'objet
@@ -175,11 +174,13 @@ implements JvnRemoteCoord {
 			this.jvnObjects.get(this.jvnReferences.get(joi)).setSerializedObject(result); // Mise à jour de l'objet dans le cache
 			this.jvnWriteMode.put(joi, js); // Mise à jour du serveur en écriture sur l'objet
 		}
-		else
+		else if(this.jvnReferences.contains(joi)) // Si l'objet est enregistré dans le cache
 		{
-			result = this.jvnObjects.get(this.jvnReferences.get(joi));
+			String ref = this.jvnReferences.get(joi);
+			result = this.jvnObjects.get(ref);
 			this.jvnWriteMode.put(joi, js);
 		}
+		else System.out.println("Object no cached");
 		
 		/** LECTURE **/
 		List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);

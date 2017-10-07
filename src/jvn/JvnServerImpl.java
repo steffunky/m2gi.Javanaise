@@ -23,7 +23,7 @@ extends UnicastRemoteObject
 implements JvnLocalServer, JvnRemoteServer{
 
 	private static final long serialVersionUID = 1L;
-	private static final String coordNetworkURL = "//localhost:2001";
+	private static final String coordNetworkURL = "//localhost:1099";
 	
 	// A JVN server is managed as a singleton 
 	private static JvnServerImpl js = null;
@@ -57,6 +57,7 @@ implements JvnLocalServer, JvnRemoteServer{
 			try {
 				js = new JvnServerImpl();
 			} catch (Exception e) {
+				e.printStackTrace();
 				return null;
 			}
 		}
@@ -90,7 +91,7 @@ implements JvnLocalServer, JvnRemoteServer{
 		try {
 			int id = this.jc.jvnGetObjectId(); // Obtention de l'identifiant du nouvel objet jvn
 			JvnObject obj = new JvnObjectImpl(o, id);
-			obj.jvnLockWrite(); // Mise en place du verrou en écriture sur l'objet
+			obj.jvnLockWrite();// Mise en place du verrou en écriture sur l'objet
 			return obj;
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -126,7 +127,10 @@ implements JvnLocalServer, JvnRemoteServer{
 		// to be completed 
 		try {
 			JvnObject obj = this.jc.jvnLookupObject(jon, this); // Obtient l'objet jvn distant
-			this.jvnObjectsCache.put(obj.jvnGetObjectId(), obj); // Enregistre ou mets à jour l'objet jvn dans le cache serveur
+			
+			if(obj != null)
+				this.jvnObjectsCache.put(obj.jvnGetObjectId(), obj); // Enregistre ou mets à jour l'objet jvn dans le cache serveur
+			
 			return obj;
 		} catch (RemoteException | NullPointerException e) {
 			e.printStackTrace();

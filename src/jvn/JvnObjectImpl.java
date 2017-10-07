@@ -68,7 +68,8 @@ public class JvnObjectImpl implements JvnObject {
 			case ReadCached:
 			case NoLock:
 				JvnLocalServer server = JvnServerImpl.jvnGetServer(); // Obtention de la ref serveur
-				server.jvnLockWrite(this.jvnGetObjectId());
+				int joi = this.jvnGetObjectId();
+				server.jvnLockWrite(joi);
 				this.state = LockState.Write;
 				break;
 			default:
