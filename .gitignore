@@ -1,3 +1,6 @@
 .classpath
 [Bb]uild/*
 .project
+build.properties
+build.xml
+java.policy
