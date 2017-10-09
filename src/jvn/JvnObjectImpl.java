@@ -78,7 +78,7 @@ public class JvnObjectImpl implements JvnObject {
 	}
 
 	@Override
-	public void jvnUnLock() throws JvnException 
+	public synchronized void jvnUnLock() throws JvnException 
 	{
 		switch(this.state)
 		{
@@ -101,7 +101,9 @@ public class JvnObjectImpl implements JvnObject {
 				break;
 			default:
 				throw new JvnException("Etat non valide \"" + this.state + "\"");
-		}		
+		}
+		this.notify();
+		
 	}
 
 	@Override
