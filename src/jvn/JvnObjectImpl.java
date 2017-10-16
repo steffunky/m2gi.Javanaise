@@ -155,6 +155,7 @@ public class JvnObjectImpl implements JvnObject {
 	@Override
 	public Serializable jvnInvalidateWriter() throws JvnException 
 	{
+		System.out.println("InvalidateWriter current state : " + this.state);
 		try 
 		{
 			switch(this.state)
@@ -188,7 +189,7 @@ public class JvnObjectImpl implements JvnObject {
 			e.printStackTrace();
 			throw new JvnException(e.getMessage());
 		}
-		
+		System.out.println("InvalidateWriter final state : " + this.state);
 		return this.jvnGetObjectState();
 	}
 

@@ -193,7 +193,7 @@ implements JvnLocalServer, JvnRemoteServer{
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
 	public synchronized Serializable jvnInvalidateWriter(int joi) throws java.rmi.RemoteException,jvn.JvnException { 
-		// to be completed 
+		// to be completed
 		JvnObject obj = this.jvnObjectsCache.get(joi);
 		if(obj == null)
 			throw new JvnException("Objet JVN inexistant dans le cache serveur");

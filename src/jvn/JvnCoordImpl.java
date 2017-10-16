@@ -140,7 +140,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			result = server.jvnInvalidateWriterForReader(joi); // Demande de libération du verrou en écriture pour lecture
 			this.jvnWriteMode.remove(joi); // Objet plus en écriture au niveau du serveur distant
 			String ref = this.jvnReferences.get(joi);
-			System.out.println("LockRead Object ref : " + ref);
 			this.jvnObjects.get(ref).setSerializedObject(result); // Mise à jour de l'objet dans le cache
 		}
 		else 
@@ -184,9 +183,11 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			String ref = this.jvnReferences.get(joi);
 			this.jvnObjects.get(ref).setSerializedObject(result); // Mise à jour de l'objet dans le cache
 			this.jvnWriteMode.put(joi, js); // Mise à jour du serveur en écriture sur l'objet
+			System.out.println("Le serveur " + js + " est maintenant en écriture sur l'objet " + joi);
 		}
 		else // Cas ou aucun serveur n'est actuellement en écriture sur l'objet
 		{
+			/** READ **/
 			// Invalide tous les lecteurs actuels sur l'objet
 			List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);
 			if(serversReadingObject != null)
@@ -204,6 +205,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			
 			result = this.jvnObjects.get(ref).jvnGetObjectState();
 			this.jvnWriteMode.put(joi, js);
+			System.out.println("Le serveur " + js + " est maintenant en écriture sur l'objet " + joi);
 		}
 
 		return result;
