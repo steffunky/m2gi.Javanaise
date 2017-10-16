@@ -112,7 +112,11 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	public synchronized JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
 			throws java.rmi.RemoteException,jvn.JvnException{
 		// to be completed 
-		return this.jvnObjects.get(jon);
+		JvnObject o = this.jvnObjects.get(jon);
+		if ( o != null) {
+			o.jvnSetFree();
+		}
+		return o;
 	}
 
 	/**
@@ -146,7 +150,7 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 		
 		serversReadingObject.add(js); // Ajout du serveur dans la liste des serveurs en lecture sur l'objet
 		this.jvnReadMode.put(joi, serversReadingObject); // Mise à jour de la liste
-		
+		System.out.println("Result read : " + (result == null));
 		return result;
 	}
 
@@ -194,7 +198,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			
 			this.jvnReadMode.remove(joi); // On retire de la liste tous les serveurs qui étaient en lecture sur l'objet
 		}
-		
+		System.out.println("Result write : " + (result == null));
+
 		return result;
 	}
 

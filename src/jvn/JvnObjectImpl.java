@@ -232,4 +232,9 @@ public class JvnObjectImpl implements JvnObject {
 		return this.jvnGetObjectState();
 	}
 
+	@Override
+	public void jvnSetFree() {
+		this.state = LockState.NoLock;
+	}
+
 }

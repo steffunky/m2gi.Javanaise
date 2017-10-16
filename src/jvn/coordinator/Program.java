@@ -13,6 +13,6 @@ public class Program
 	public static void main(String[] args) throws MalformedURLException, RemoteException, AlreadyBoundException
 	{
 		JvnRemoteCoord coordinator = JvnCoordImpl.getInstance();
-		Naming.bind(JvnRemoteCoord.jvnCoordRemoteIdentfier, coordinator);
+		Naming.rebind(JvnRemoteCoord.jvnCoordRemoteIdentfier, coordinator);
 	}
 }

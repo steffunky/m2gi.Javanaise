@@ -27,6 +27,11 @@ public interface JvnObject extends Serializable {
 	throws jvn.JvnException; 
 
 	/**
+	* Release object's lock
+	**/
+	public void jvnSetFree();
+	
+	/**
 	* Get a Write lock on the object 
 	* @throws JvnException
 	**/
