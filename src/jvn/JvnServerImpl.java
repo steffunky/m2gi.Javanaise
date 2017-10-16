@@ -91,7 +91,7 @@ implements JvnLocalServer, JvnRemoteServer{
 		try {
 			int id = this.jc.jvnGetObjectId(); // Obtention de l'identifiant du nouvel objet jvn
 			JvnObject obj = new JvnObjectImpl(o, id);
-			obj.jvnLockWrite();// Mise en place du verrou en écriture sur l'objet
+			//obj.jvnLockWrite();// Mise en place du verrou en écriture sur l'objet
 			return obj;
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -197,7 +197,9 @@ implements JvnLocalServer, JvnRemoteServer{
 		JvnObject obj = this.jvnObjectsCache.get(joi);
 		if(obj == null)
 			throw new JvnException("Objet JVN inexistant dans le cache serveur");
-		return obj.jvnInvalidateWriter();
+		Serializable o = obj.jvnInvalidateWriter();
+		this.jvnObjectsCache.get(joi).setSerializedObject(o);
+		return o;
 	};
 
 	/**
@@ -211,7 +213,9 @@ implements JvnLocalServer, JvnRemoteServer{
 		JvnObject obj = this.jvnObjectsCache.get(joi);
 		if(obj == null)
 			throw new JvnException("Objet JVN inexistant dans le cache serveur");
-		return obj.jvnInvalidateWriterForReader();
+		Serializable o = obj.jvnInvalidateWriterForReader();
+		this.jvnObjectsCache.get(joi).setSerializedObject(o);
+		return o;
 	};
 
 }

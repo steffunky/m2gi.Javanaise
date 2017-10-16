@@ -13,7 +13,7 @@ public class JvnObjectImpl implements JvnObject {
 	{
 		this.id = id; 
 		this.serializedObject = object;
-		this.state = LockState.NoLock;
+		this.state = LockState.Write;
 	}
 	
 	@Override
@@ -43,7 +43,7 @@ public class JvnObjectImpl implements JvnObject {
 				break;
 			case NoLock:
 				JvnLocalServer server = JvnServerImpl.jvnGetServer(); // Obtention de la ref serveur
-				server.jvnLockRead(this.jvnGetObjectId());
+				this.setSerializedObject(server.jvnLockRead(this.jvnGetObjectId()));
 				this.state = LockState.Read;
 				break;
 			default:
@@ -69,7 +69,7 @@ public class JvnObjectImpl implements JvnObject {
 			case NoLock:
 				JvnLocalServer server = JvnServerImpl.jvnGetServer(); // Obtention de la ref serveur
 				int joi = this.jvnGetObjectId();
-				server.jvnLockWrite(joi);
+				this.setSerializedObject(server.jvnLockWrite(joi));
 				this.state = LockState.Write;
 				break;
 			default:

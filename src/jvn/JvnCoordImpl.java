@@ -180,7 +180,10 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			result = this.jvnObjects.get(ref);
 			this.jvnWriteMode.put(joi, js);
 		}
-		else System.out.println("Object no cached");
+		else 
+		{
+			System.out.println("Object no cached");
+		}
 		
 		/** LECTURE **/
 		List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);
