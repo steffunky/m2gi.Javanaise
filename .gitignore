@@ -5,3 +5,5 @@ build.properties
 build.xml
 java.policy
 .DS_Store
+/bin/
+.settings
