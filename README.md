@@ -2,7 +2,8 @@
 
 **Version courante :** Javanaise 1.0
 
-**Etat du projet :** Le coordinateur et les clients IRC disposent chacun d'une instance différente d'objet après lookup/register. Ainsi la communication IRC n'est pas fonctionnelle.
+**Etat du projet :** Le coordinateur et les clients IRC fonctionnent globalement correctement pour la V1.
+Quelques petits problèmes persistent : tant que le premier client lancé (celui qui créer l'objet IRC) n'as pas write, le write des autres clients paraît inutile, il faut de ce fait commencer la transaction par une action du premier client.
 
 #### Compiler le projet
 ```sh
