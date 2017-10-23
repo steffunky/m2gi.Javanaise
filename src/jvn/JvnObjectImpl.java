@@ -135,6 +135,7 @@ public class JvnObjectImpl implements JvnObject {
 				case WriteCached:
 					throw new JvnException("Cas invalide");
 				case ReadWriteCached:
+					this.wait();
 					this.state = LockState.NoLock;
 					break;
 				case NoLock:
@@ -205,19 +206,19 @@ public class JvnObjectImpl implements JvnObject {
 					break;
 				case Write:
 					this.wait(); // En attente de notification
-					this.state = LockState.Read;
+					this.state = LockState.ReadCached;
 					break;
 				case ReadCached:
-					this.state = LockState.Read;
+					this.state = LockState.ReadCached;
 					break;
 				case WriteCached:
-					this.state = LockState.Read;
+					this.state = LockState.ReadCached;
 					break;
 				case ReadWriteCached:
-					this.state = LockState.Read;
+					// Nothing
 					break;
 				case NoLock:
-					this.state = LockState.Read;
+					this.state = LockState.ReadCached;
 					break;
 				default:
 					throw new JvnException("Etat non valide \"" + this.state + "\"");

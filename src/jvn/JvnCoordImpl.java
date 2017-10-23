@@ -47,8 +47,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * Default constructor
 	 * @throws JvnException
 	 **/
-	private JvnCoordImpl() throws Exception {
-		// to be completed
+	private JvnCoordImpl() throws Exception 
+	{
 		this.currentObjectId = 0;
 		this.jvnObjects = new Hashtable<String, JvnObject>();
 		this.jvnReferences = new Hashtable<Integer, String>();
@@ -67,7 +67,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			try {
 				jvnCoordInstance = new JvnCoordImpl();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -79,9 +78,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 *  newly created JVN object)
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public synchronized int jvnGetObjectId()
-			throws java.rmi.RemoteException,jvn.JvnException {
-		// to be completed 
+	public synchronized int jvnGetObjectId() throws java.rmi.RemoteException,jvn.JvnException 
+	{
 		return ++this.currentObjectId;
 	}
 
@@ -92,10 +90,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @param js  : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public synchronized void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js)
-			throws java.rmi.RemoteException,jvn.JvnException{
-		// to be completed
-		
+	public synchronized void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException
+	{
 		this.jvnObjects.put(jon, jo);
 		this.jvnReferences.put(jo.jvnGetObjectId(), jon);
 		
@@ -109,13 +105,13 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @param js : the remote reference of the JVNServer
 	 * @throws java.rmi.RemoteException,JvnException
 	 **/
-	public synchronized JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
-			throws java.rmi.RemoteException,jvn.JvnException{
-		// to be completed 
+	public synchronized JvnObject jvnLookupObject(String jon, JvnRemoteServer js) throws java.rmi.RemoteException,jvn.JvnException
+	{
 		JvnObject o = this.jvnObjects.get(jon);
-		if ( o != null) {
+		if (o != null) {
 			o.jvnSetFree();
 		}
+		
 		return o;
 	}
 
@@ -126,13 +122,21 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @return the current JVN object state
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public synchronized Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException{
-		// to be completed
+	public synchronized Serializable jvnLockRead(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException
+	{
 		Serializable result;
 		
 		/** ECRITURE **/
 		// Obtention du serveur en écriture sur l'objet
 		JvnRemoteServer server = this.jvnWriteMode.get(joi);
+		
+		List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);
+		
+		if(serversReadingObject == null)
+			serversReadingObject = new ArrayList<JvnRemoteServer>();
+		
+		if(server == js)
+			throw new JvnException("Tentative de lock Read sur un objet déjà lock par l'objet demandeur...");
 		
 		// Objet en écriture sur un serveur distant
 		if(server != null)
@@ -141,18 +145,13 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			this.jvnWriteMode.remove(joi); // Objet plus en écriture au niveau du serveur distant
 			String ref = this.jvnReferences.get(joi);
 			this.jvnObjects.get(ref).setSerializedObject(result); // Mise à jour de l'objet dans le cache
+			serversReadingObject.add(server); // Ajout du serveur anciennement en écriture, dans la liste des lecteurs
 		}
 		else 
 		{
 			String ref = this.jvnReferences.get(joi);
 			result = this.jvnObjects.get(ref).jvnGetObjectState();
 		}
-			
-		List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);
-		
-		if(serversReadingObject == null)
-			serversReadingObject = new ArrayList<JvnRemoteServer>();
-		System.out.println("Servers reading on " + joi + " : " + serversReadingObject.size() + " servers");
 		
 		serversReadingObject.add(js); // Ajout du serveur dans la liste des serveurs en lecture sur l'objet
 		this.jvnReadMode.put(joi, serversReadingObject); // Mise à jour de la liste
@@ -169,7 +168,6 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 **/
 	public synchronized Serializable jvnLockWrite(int joi, JvnRemoteServer js) throws java.rmi.RemoteException, JvnException
 	{
-		// to be completed
 		Serializable result = null;
 		
 		/** ECRITURE **/
@@ -183,30 +181,27 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 			String ref = this.jvnReferences.get(joi);
 			this.jvnObjects.get(ref).setSerializedObject(result); // Mise à jour de l'objet dans le cache
 			this.jvnWriteMode.put(joi, js); // Mise à jour du serveur en écriture sur l'objet
-			System.out.println("Le serveur " + js + " est maintenant en écriture sur l'objet " + joi);
 		}
-		else // Cas ou aucun serveur n'est actuellement en écriture sur l'objet
+		// Cas ou aucun serveur n'est actuellement en écriture sur l'objet
+		
+		/** READ **/
+		// Invalide tous les lecteurs actuels sur l'objet
+		List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);
+		if(serversReadingObject != null)
 		{
-			/** READ **/
-			// Invalide tous les lecteurs actuels sur l'objet
-			List<JvnRemoteServer> serversReadingObject = this.jvnReadMode.get(joi);
-			if(serversReadingObject != null)
-			{
-				for(JvnRemoteServer s : serversReadingObject)
-					s.jvnInvalidateReader(joi);
-				
-				this.jvnReadMode.remove(joi); // On retire de la liste tous les serveurs qui étaient en lecture sur l'objet
-			}
+			for(JvnRemoteServer s : serversReadingObject)
+				s.jvnInvalidateReader(joi);
 			
-			// Mise en écriture de l'objet
-			String ref = this.jvnReferences.get(joi);
-			if(ref == null)
-				throw new JvnException("La demande du vérrou en écriture a été réalisée sur un objet non pris en charge par le coordinateur");
-			
-			result = this.jvnObjects.get(ref).jvnGetObjectState();
-			this.jvnWriteMode.put(joi, js);
-			System.out.println("Le serveur " + js + " est maintenant en écriture sur l'objet " + joi);
+			this.jvnReadMode.remove(joi); // On retire de la liste tous les serveurs qui étaient en lecture sur l'objet
 		}
+		
+		// Mise en écriture de l'objet
+		String ref = this.jvnReferences.get(joi);
+		if(ref == null)
+			throw new JvnException("La demande du vérrou en écriture a été réalisée sur un objet non pris en charge par le coordinateur");
+		
+		result = this.jvnObjects.get(ref).jvnGetObjectState();
+		this.jvnWriteMode.put(joi, js);
 
 		return result;
 	}
@@ -216,8 +211,8 @@ public class JvnCoordImpl extends UnicastRemoteObject implements JvnRemoteCoord 
 	 * @param js  : the remote reference of the server
 	 * @throws java.rmi.RemoteException, JvnException
 	 **/
-	public synchronized void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException {
-
+	public synchronized void jvnTerminate(JvnRemoteServer js) throws java.rmi.RemoteException, JvnException 
+	{
 		/** SUPPRESSION DE LA LISTE DE LECTURE **/
 		for(List<JvnRemoteServer> servers : this.jvnReadMode.values())
 		{
