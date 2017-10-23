@@ -8,7 +8,12 @@
 
 package irc;
 
-public class Sentence implements java.io.Serializable {
+import java.io.Serializable;
+
+import jvn.dynamicproxy.JvnAction;
+import jvn.dynamicproxy.JvnAction.ActionType;
+
+public class Sentence implements ISentence, Serializable {
 	private static final long serialVersionUID = 1L;
 	String data;
 
@@ -19,6 +24,7 @@ public class Sentence implements java.io.Serializable {
 	public void write(String text) {
 		data = text;
 	}
+	
 	public String read() {
 		return data;	
 	}
