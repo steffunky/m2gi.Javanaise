@@ -2,8 +2,7 @@
 
 **Version courante :** Javanaise 1.0
 
-**Etat du projet :** Le coordinateur et les clients IRC fonctionnent globalement correctement pour la V1.
-Quelques petits problèmes persistent : tant que le premier client lancé (celui qui créer l'objet IRC) n'as pas write, le write des autres clients paraît inutile, il faut de ce fait commencer la transaction par une action du premier client.
+**Etat du projet :** Le coordinateur et les clients IRC fonctionnent correctement pour la version 1.0.
 
 #### Compiler le projet
 ```sh
