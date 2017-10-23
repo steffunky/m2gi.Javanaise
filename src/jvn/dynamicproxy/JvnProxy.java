@@ -45,7 +45,7 @@ public class JvnProxy implements InvocationHandler
 		JvnInvocation invocation = new JvnInvocation(this.jvnobj, method, args);
 		
 		try {
-			return interceptor.invoke(invocation);
+			res = interceptor.invoke(invocation);
 		} catch (InvocationException e) {
 			e.printStackTrace();
 		}

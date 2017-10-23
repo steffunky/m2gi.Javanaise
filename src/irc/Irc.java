@@ -98,19 +98,14 @@ public class Irc {
   **/
 	public void actionPerformed (ActionEvent e) {
 		// invoke the method
-		//String s = ((Sentence)(irc.sentence.jvnGetObjectState())).read();
 		String s = irc.sentence.read();
-		
-		// unlock the object
-		//irc.sentence.jvnUnLock();
-		
+
 		if(s != null)
 		{
 			// display the read value
 			irc.data.setText(s);
 			irc.text.append(s+"\n");
 		}
-		else System.err.println("IRC PROBLEM : Sentence null");
 	}
 }
 
@@ -130,9 +125,6 @@ public class Irc {
 	public void actionPerformed (ActionEvent e) {
 		// get the value to be written from the buffer
 		String s = irc.data.getText();
-			
-		// lock the object in write mode
-		//irc.sentence.jvnLockWrite();
 		
 		// invoke the method
 		irc.sentence.write(s);
