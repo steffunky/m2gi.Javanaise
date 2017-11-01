@@ -24,7 +24,17 @@ public class JvnProxy implements InvocationHandler
 	
 	public static Object newInstance(Object obj, String rmikey) throws JvnException 
 	{
-		JvnServerImpl js = JvnServerImpl.jvnGetServer();
+		return newInstance(obj, rmikey, false);
+	} 
+	
+	public static Object newInstance(Object obj, String rmikey, boolean createServer) throws JvnException 
+	{
+		JvnServerImpl js;
+		
+		if(createServer)
+			js = JvnServerImpl.jvnCreateServer();
+		else
+			js = JvnServerImpl.jvnGetServer();
 		
 		// TODO : Revoir s'il est raisonnable d'intégrer la gestion serveur dans le Proxy
 		JvnObject o = js.jvnLookupObject(rmikey);
@@ -39,7 +49,7 @@ public class JvnProxy implements InvocationHandler
 	} 
 	
 	@Override
-	public Object invoke(Object obj, Method method, Object[] args) 
+	public Object invoke(Object obj, Method method, Object[] args) throws JvnException 
 	{ 
 		Object res = null;
 		JvnInvocation invocation = new JvnInvocation(this.jvnobj, method, args);
@@ -48,6 +58,7 @@ public class JvnProxy implements InvocationHandler
 			res = interceptor.invoke(invocation);
 		} catch (InvocationException e) {
 			e.printStackTrace();
+			throw new JvnException(e.getMessage());
 		}
 		
 		return res;

@@ -64,6 +64,19 @@ implements JvnLocalServer, JvnRemoteServer{
 		}
 		return js;
 	}
+	
+	public static JvnServerImpl jvnCreateServer()
+	{
+		JvnServerImpl server;
+		try {
+			server = new JvnServerImpl();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+		return server;
+	}
 
 	/**
 	 * The JVN service is not used anymore
